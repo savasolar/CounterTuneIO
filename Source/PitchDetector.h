@@ -19,20 +19,21 @@ public:
     float getCurrentFrequency() const;
     float getCurrentConfidence() const;
 
+    // <new>
+    void setInputSampleRate(double rate) { inputSampleRate = rate; }
+    // </new>
+
 private:
     Ort::Env env;
     std::unique_ptr<Ort::Session> session;
     Ort::MemoryInfo memoryInfo;
     std::vector<float> internalBuffer; // Accumulate audio samples
 
-
-    // <new>
     // resampling 44.1 kHz to 16 kHz
     std::vector<float> resampledBuffer;
     double inputSampleRate = 0.0;
     double targetSampleRate = 16000.0; // Crepe's expected rate
     double currentPosition = 0.0; // position in input buffer for resampling
-    // </new>
 
     float currentFrequency = 0.0f;
     float currentConfidence = 0.0f;

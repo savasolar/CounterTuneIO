@@ -20,10 +20,6 @@ bool PitchDetector::initialize(const void* modelData, size_t modelDataLength) {
         auto inputTensorInfo = inputInfo.GetTensorTypeAndShapeInfo();
         auto inputShape = inputTensorInfo.GetShape();
         DBG("Input shape: [" + juce::String(inputShape[0]) + ", " + juce::String(inputShape[1]) + "]");
-//        if (inputShape.size() != 2 || inputShape[0] != 1 || inputShape[1] != frameSize) {
-//            DBG("Invalid input shape for CREPE model");
-//            return false;
-//        }
         if (inputShape.size() != 2 || (inputShape[0] != 1 && inputShape[0] != -1) || inputShape[1] != 1024) {
             DBG("Invalid input shape for CREPE model");
             return false;
@@ -45,139 +41,53 @@ bool PitchDetector::initialize(const void* modelData, size_t modelDataLength) {
     }
 }
 
-//void PitchDetector::processBuffer(const juce::AudioBuffer<float>& buffer) {
-//    if (buffer.getNumChannels() < 1 || !session) return;
-//
-//    // Use first channel (mono assumption; adjust for stereo if needed)
-//    const float* channelData = buffer.getReadPointer(0);
-//    int numSamples = buffer.getNumSamples();
-//    internalBuffer.insert(internalBuffer.end(), channelData, channelData + numSamples);
-//
-//    // Process frames when enough samples are available
-//    while (internalBuffer.size() >= frameSize) {
-//        std::vector<float> frame(internalBuffer.begin(), internalBuffer.begin() + frameSize);
-//
-//        // Prepare input tensor
-//        std::vector<int64_t> inputShape = { 1, static_cast<int64_t>(frameSize) };
-//        Ort::Value inputTensor = Ort::Value::CreateTensor<float>(
-//            memoryInfo, frame.data(), frame.size(), inputShape.data(), inputShape.size());
-//
-//        // Get input/output names
-//        Ort::AllocatorWithDefaultOptions allocator;
-//        auto inputName = session->GetInputNameAllocated(0, allocator);
-//        auto outputName = session->GetOutputNameAllocated(0, allocator);
-//        const char* inputNames[] = { inputName.get() };
-//        const char* outputNames[] = { outputName.get() };
-//
-//        // Run inference
-//        std::vector<Ort::Value> outputTensors = session->Run(
-//            Ort::RunOptions{ nullptr }, inputNames, &inputTensor, 1, outputNames, 1);
-//
-//        if (!outputTensors.empty()) {
-//            float* outputData = outputTensors[0].GetTensorMutableData<float>();
-//            int numBins = outputTensors[0].GetTensorTypeAndShapeInfo().GetShape()[1];
-//
-//            // Find pitch with highest probability
-//            auto maxIt = std::max_element(outputData, outputData + numBins);
-//            int maxIndex = std::distance(outputData, maxIt);
-//            currentConfidence = *maxIt;
-//            currentFrequency = mapIndexToFrequency(maxIndex);
-//
-//            // Log the prediction details
-//            DBG("Max index: " + juce::String(maxIndex) + ", Confidence: " + juce::String(currentConfidence) + ", Frequency: " + juce::String(currentFrequency) + " Hz");
-//        }
-//
-//        // Remove processed samples
-//        internalBuffer.erase(internalBuffer.begin(), internalBuffer.begin() + frameSize);
-//    }
-//}
-
 void PitchDetector::processBuffer(const juce::AudioBuffer<float>& buffer) {
-    // Early exit if conditions aren't met
-    if (buffer.getNumChannels() < 1 || !session || inputSampleRate == 0.0) return;
+    if (buffer.getNumChannels() < 1 || !session) return;
 
-    // Append incoming samples to internalBuffer (mono, using first channel)
+    // Use first channel (mono assumption; adjust for stereo if needed)
     const float* channelData = buffer.getReadPointer(0);
     int numSamples = buffer.getNumSamples();
     internalBuffer.insert(internalBuffer.end(), channelData, channelData + numSamples);
 
-    // Calculate resampling ratio (targetSampleRate is 16000.0 for CREPE)
-    double ratio = targetSampleRate / inputSampleRate;
+    // Process frames when enough samples are available
+    while (internalBuffer.size() >= frameSize) {
+        std::vector<float> frame(internalBuffer.begin(), internalBuffer.begin() + frameSize);
 
-    // Resample to target sample rate using linear interpolation
-    while (currentPosition < internalBuffer.size()) {
-        int idx = static_cast<int>(currentPosition);
-        float frac = currentPosition - idx;
-        if (idx + 1 < internalBuffer.size()) {
-            float sample = internalBuffer[idx] * (1 - frac) + internalBuffer[idx + 1] * frac;
-            resampledBuffer.push_back(sample);
-        }
-        else {
-            break; // Not enough samples for interpolation yet
-        }
-        currentPosition += ratio;
-    }
-
-    // Process 1024-sample frames from resampledBuffer
-    while (resampledBuffer.size() >= frameSize) {
-        // Extract a frame of frameSize (1024) samples
-        std::vector<float> frame(resampledBuffer.begin(), resampledBuffer.begin() + frameSize);
-
-        // Prepare input tensor for ONNX model
+        // Prepare input tensor
         std::vector<int64_t> inputShape = { 1, static_cast<int64_t>(frameSize) };
         Ort::Value inputTensor = Ort::Value::CreateTensor<float>(
             memoryInfo, frame.data(), frame.size(), inputShape.data(), inputShape.size());
 
-        // Get input and output names for the ONNX session
+        // Get input/output names
         Ort::AllocatorWithDefaultOptions allocator;
         auto inputName = session->GetInputNameAllocated(0, allocator);
         auto outputName = session->GetOutputNameAllocated(0, allocator);
         const char* inputNames[] = { inputName.get() };
         const char* outputNames[] = { outputName.get() };
 
-        // Run inference with the frame
+        // Run inference
         std::vector<Ort::Value> outputTensors = session->Run(
             Ort::RunOptions{ nullptr }, inputNames, &inputTensor, 1, outputNames, 1);
 
-        // Process inference output
         if (!outputTensors.empty()) {
-            //float* outputData = outputTensors[0].GetTensorMutableData<float>();
-            //int numBins = outputTensors[0].GetTensorTypeAndShapeInfo().GetShape()[1];
-
-            //// Find pitch with highest probability
-            //auto maxIt = std::max_element(outputData, outputData + numBins);
-            //int maxIndex = stdP::distance(outputData, maxIt);
-            //currentConfidence = *maxIt;
-            //currentFrequency = mapIndexToFrequency(maxIndex);
-
             float* outputData = outputTensors[0].GetTensorMutableData<float>();
             int numBins = outputTensors[0].GetTensorTypeAndShapeInfo().GetShape()[1];
-            std::vector<float> probabilities(numBins);
-            for (int i = 0; i < numBins; ++i) {
-                probabilities[i] = 1.0f / (1.0f + expf(-outputData[i]));
-            }
-            auto maxIt = std::max_element(probabilities.begin(), probabilities.end());
-            int maxIndex = std::distance(probabilities.begin(), maxIt);
+
+            // Find pitch with highest probability
+            auto maxIt = std::max_element(outputData, outputData + numBins);
+            int maxIndex = std::distance(outputData, maxIt);
             currentConfidence = *maxIt;
             currentFrequency = mapIndexToFrequency(maxIndex);
 
             // Log the prediction details
-            DBG("Max index: " + juce::String(maxIndex) +
-                ", Confidence: " + juce::String(currentConfidence) +
-                ", Frequency: " + juce::String(currentFrequency) + " Hz");
+            DBG("Max index: " + juce::String(maxIndex) + ", Confidence: " + juce::String(currentConfidence) + ", Frequency: " + juce::String(currentFrequency) + " Hz");
         }
 
-        // Remove processed samples from resampledBuffer
-        resampledBuffer.erase(resampledBuffer.begin(), resampledBuffer.begin() + frameSize);
-    }
-
-    // Clean up processed samples from internalBuffer
-    int samplesToRemove = static_cast<int>(currentPosition);
-    if (samplesToRemove > 0) {
-        internalBuffer.erase(internalBuffer.begin(), internalBuffer.begin() + samplesToRemove);
-        currentPosition -= samplesToRemove;
+        // Remove processed samples
+        internalBuffer.erase(internalBuffer.begin(), internalBuffer.begin() + frameSize);
     }
 }
+
 
 float PitchDetector::getCurrentFrequency() const { return currentFrequency; }
 float PitchDetector::getCurrentConfidence() const { return currentConfidence; }
