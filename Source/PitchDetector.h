@@ -42,5 +42,6 @@ private:
     // Helper to map model output to frequency
     float mapIndexToFrequency(int index) const;
 
+
 };
 

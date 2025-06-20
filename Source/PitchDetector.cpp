@@ -2,7 +2,10 @@
 
 PitchDetector::PitchDetector()
     : env(ORT_LOGGING_LEVEL_WARNING, "PitchDetector"),
-    memoryInfo(Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault)) {}
+    memoryInfo(Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault))
+{
+
+}
 
 PitchDetector::~PitchDetector() {}
 
@@ -47,6 +50,15 @@ void PitchDetector::processBuffer(const juce::AudioBuffer<float>& buffer) {
     // Use first channel (mono assumption; adjust for stereo if needed)
     const float* channelData = buffer.getReadPointer(0);
     int numSamples = buffer.getNumSamples();
+
+
+
+
+
+
+
+
+
     internalBuffer.insert(internalBuffer.end(), channelData, channelData + numSamples);
 
     // Process frames when enough samples are available
@@ -80,7 +92,7 @@ void PitchDetector::processBuffer(const juce::AudioBuffer<float>& buffer) {
             currentFrequency = mapIndexToFrequency(maxIndex);
 
             // Log the prediction details
-            DBG("Max index: " + juce::String(maxIndex) + ", Confidence: " + juce::String(currentConfidence) + ", Frequency: " + juce::String(currentFrequency) + " Hz");
+//            DBG("Max index: " + juce::String(maxIndex) + ", Confidence: " + juce::String(currentConfidence) + ", Frequency: " + juce::String(currentFrequency) + " Hz");
         }
 
         // Remove processed samples
@@ -92,14 +104,7 @@ void PitchDetector::processBuffer(const juce::AudioBuffer<float>& buffer) {
 float PitchDetector::getCurrentFrequency() const { return currentFrequency; }
 float PitchDetector::getCurrentConfidence() const { return currentConfidence; }
 
-//float PitchDetector::mapIndexToFrequency(int index) const {
-//    // Placeholder: Map bin index to frequency based on CREPE model specifics
-//    // Example: CREPE typically uses 360 bins over 6 octaves (C1 to C7)
-//    // Adjust this based on the actual model’s output mapping
-//    float cents = index * 20.0f; // Assuming 20-cent steps
-//    float refFreq = 10.0f; // Reference frequency (e.g., 10 Hz)
-//    return refFreq * powf(2.0f, cents / 1200.0f);
-//}
+// most definitely there is a mapping function problem!
 
 float PitchDetector::mapIndexToFrequency(int index) const {
     const float f_min = 32.7f; // C1
