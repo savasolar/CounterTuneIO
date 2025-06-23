@@ -95,7 +95,7 @@ void CounterTuneIOAudioProcessor::changeProgramName (int index, const juce::Stri
 
 void CounterTuneIOAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    pitchDetector->setInputSampleRate(sampleRate);
+//    pitchDetector->setInputSampleRate(sampleRate);
 
     if (transportSource != nullptr)
         transportSource->prepareToPlay(samplesPerBlock, sampleRate);

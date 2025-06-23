@@ -109,5 +109,9 @@ float PitchDetector::getCurrentConfidence() const { return currentConfidence; }
 float PitchDetector::mapIndexToFrequency(int index) const {
     const float f_min = 32.7f; // C1
     const float cents_per_bin = 20.0f; // CREPE uses 20 cents per bin
-    return f_min * powf(2.0f, (index * cents_per_bin) / 1200.0f);
+
+    // fixing detection distortion
+    float correctionOffset = 2.67f;
+
+    return f_min * powf(2.0f, (index * cents_per_bin) / 1200.0f) * correctionOffset;
 }
