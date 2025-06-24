@@ -21,6 +21,7 @@ private:
     juce::Label confidenceLabel;
     juce::Label melodyGenerationLabel;
     juce::Label melodyStatusLabel;
+    juce::Label inputMelodyLabel;
     juce::Label generatedMelodyLabel;
     juce::Label sampleCollectionLabel;
 

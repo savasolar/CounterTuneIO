@@ -19,8 +19,13 @@ void CounterTuneIOAudioProcessorEditor::timerCallback() {
     float freq = audioProcessor.getCurrentFrequency();
     float conf = audioProcessor.getCurrentConfidence();
 
+
+    // to do: set pitchStatusLabel text
     frequencyLabel.setText("FREQ: " + juce::String(freq, 2) + " Hz", juce::dontSendNotification);
     confidenceLabel.setText("CONFIDENCE: " + juce::String(conf, 3), juce::dontSendNotification);
+    // to do: set melodyStatusLabel text
+    // to do: set inputMelodyLabel text
+    // to do: set generatedMelodyLabel text
 }
 
 void CounterTuneIOAudioProcessorEditor::paint (juce::Graphics& g)
@@ -68,13 +73,19 @@ void CounterTuneIOAudioProcessorEditor::resized()
     melodyStatusLabel.setText("STATUS: LOADING...", juce::dontSendNotification);
     melodyStatusLabel.setColour(juce::Label::textColourId, juce::Colours::white);
     melodyStatusLabel.setJustificationType(juce::Justification::centredLeft);
-    melodyStatusLabel.setBounds(212, 250, 588, 87);
+    melodyStatusLabel.setBounds(212, 250, 588, 58);
     addAndMakeVisible(melodyStatusLabel);
 
-    generatedMelodyLabel.setText("_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _", juce::dontSendNotification);
+    inputMelodyLabel.setText("INPUT: _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _", juce::dontSendNotification);
+    inputMelodyLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    inputMelodyLabel.setJustificationType(juce::Justification::centredLeft);
+    inputMelodyLabel.setBounds(212, 308, 588, 58);
+    addAndMakeVisible(inputMelodyLabel);
+
+    generatedMelodyLabel.setText("OUTPUT: _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _", juce::dontSendNotification);
     generatedMelodyLabel.setColour(juce::Label::textColourId, juce::Colours::white);
     generatedMelodyLabel.setJustificationType(juce::Justification::centredLeft);
-    generatedMelodyLabel.setBounds(212, 337, 588, 88);
+    generatedMelodyLabel.setBounds(212, 366, 588, 59);
     addAndMakeVisible(generatedMelodyLabel);
 
     sampleCollectionLabel.setText("SAMPLE COLLECTION", juce::dontSendNotification);
