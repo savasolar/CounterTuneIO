@@ -48,6 +48,7 @@ public:
 
 private:
 
+
     // Audio playback
     std::unique_ptr<juce::AudioFormatManager> formatManager;
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
@@ -63,6 +64,39 @@ private:
     void initializeAudioPlayback();
 
 
+
+    // <new>
+
+    //class PitchDetectionThread : public juce::Thread {
+    //public:
+    //    PitchDetectionThread(PitchDetector& detector)
+    //        : juce::Thread("Pitch Detection Thread"), pitchDetector(detector) {}
+    //    void run() override;
+    //    void processAudio(const juce::AudioBuffer<float>& buffer);
+    //private:
+    //    PitchDetector& pitchDetector;
+    //    juce::AudioBuffer<float> bufferToProcess;
+    //    juce::CriticalSection bufferLock;
+    //};
+
+    class PitchDetectionThread : public juce::Thread {
+    public:
+        PitchDetectionThread(PitchDetector& detector)
+            : juce::Thread("Pitch Detection Thread"), pitchDetector(detector) {}
+        void run() override;
+        void processAudio(const juce::AudioBuffer<float>& buffer);
+    private:
+        PitchDetector& pitchDetector;
+        juce::AudioBuffer<float> accumulatedBuffer;  // Changed name
+        juce::CriticalSection bufferLock;
+        int writePosition = 0;  // Track where to write next
+    };
+
+    // </new>
+
+    // <new>
+    std::unique_ptr<PitchDetectionThread> pitchThread;
+    // </new>
     
 
 

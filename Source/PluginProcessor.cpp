@@ -11,7 +11,8 @@ CounterTuneIOAudioProcessor::CounterTuneIOAudioProcessor()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
                        ),
-    pitchDetector(std::make_unique<PitchDetector>())
+    pitchDetector(std::make_unique<PitchDetector>()),
+    pitchThread(std::make_unique<PitchDetectionThread>(*pitchDetector))
 #endif
 {
 
@@ -25,10 +26,22 @@ CounterTuneIOAudioProcessor::CounterTuneIOAudioProcessor()
     initializeAudioPlayback();
 
 
+
+    // <new>
+    pitchThread->startThread();
+    // </new>
+
+
 }
 
 CounterTuneIOAudioProcessor::~CounterTuneIOAudioProcessor()
 {
+
+    // <new>
+    pitchThread->stopThread(1000);
+    // </new>
+
+
 }
 
 
@@ -159,13 +172,22 @@ void CounterTuneIOAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
         }
     }
 
-    // Add your other processing here if you want
+    // Add other processing here ...
 
 
-    // analyze input audio for pitch detection
-    if (pitchDetector) {
-        pitchDetector->processBuffer(buffer);
+//    // analyze input audio for pitch detection
+//    if (pitchDetector) {
+//        pitchDetector->processBuffer(buffer);
+//    }
+
+    // <new>
+
+    if (pitchThread)
+    {
+        pitchThread->processAudio(buffer);
     }
+
+    // </new>
 }
 
 bool CounterTuneIOAudioProcessor::hasEditor() const
@@ -245,6 +267,93 @@ void CounterTuneIOAudioProcessor::initializeAudioPlayback()
     transportSource = std::make_unique<juce::AudioTransportSource>();
     resamplingSource = std::make_unique<juce::ResamplingAudioSource>(transportSource.get(), false, 2); // Stereo output
 }
+
+
+
+
+
+
+
+
+// <new>
+
+//void CounterTuneIOAudioProcessor::PitchDetectionThread::run() {
+//    while (!threadShouldExit()) {
+//        {
+//            juce::ScopedLock lock(bufferLock);
+//            if (bufferToProcess.getNumSamples() > 0) {
+//                pitchDetector.processBuffer(bufferToProcess);
+//                bufferToProcess.clear(); // Clear after processing
+//            }
+//        }
+//        wait(10); // Sleep briefly to avoid busy-waiting
+//    }
+//}
+//
+//void CounterTuneIOAudioProcessor::PitchDetectionThread::processAudio(const juce::AudioBuffer<float>& buffer) {
+//    juce::ScopedLock lock(bufferLock);
+//    bufferToProcess.makeCopyOf(buffer); // Copy the incoming buffer
+//}
+
+
+
+
+
+void CounterTuneIOAudioProcessor::PitchDetectionThread::run() {
+    while (!threadShouldExit()) {
+        juce::AudioBuffer<float> processingBuffer;
+
+        {
+            juce::ScopedLock lock(bufferLock);
+            if (writePosition > 0) {
+                // Copy accumulated data for processing
+                processingBuffer.setSize(accumulatedBuffer.getNumChannels(), writePosition);
+                for (int ch = 0; ch < accumulatedBuffer.getNumChannels(); ++ch) {
+                    processingBuffer.copyFrom(ch, 0, accumulatedBuffer, ch, 0, writePosition);
+                }
+                writePosition = 0; // Reset write position
+            }
+        }
+
+        // Process outside the lock to avoid blocking audio thread
+        if (processingBuffer.getNumSamples() > 0) {
+            pitchDetector.processBuffer(processingBuffer);
+        }
+
+        wait(10);
+    }
+}
+
+void CounterTuneIOAudioProcessor::PitchDetectionThread::processAudio(const juce::AudioBuffer<float>& buffer) {
+    juce::ScopedLock lock(bufferLock);
+
+    // Initialize accumulated buffer if needed
+    if (accumulatedBuffer.getNumChannels() != buffer.getNumChannels()) {
+        accumulatedBuffer.setSize(buffer.getNumChannels(), 8192); // Reasonable size
+        writePosition = 0;
+    }
+
+    // Check if we have enough space
+    int samplesNeeded = buffer.getNumSamples();
+    if (writePosition + samplesNeeded > accumulatedBuffer.getNumSamples()) {
+        // If not enough space, process what we have and start fresh
+        writePosition = 0;
+    }
+
+    // Append new samples
+    for (int ch = 0; ch < buffer.getNumChannels(); ++ch) {
+        accumulatedBuffer.copyFrom(ch, writePosition, buffer, ch, 0, samplesNeeded);
+    }
+    writePosition += samplesNeeded;
+}
+
+
+
+
+// </new>
+
+
+
 
 
 
