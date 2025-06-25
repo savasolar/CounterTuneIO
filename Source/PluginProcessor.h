@@ -9,6 +9,7 @@ class CounterTuneIOAudioProcessor  : public juce::AudioProcessor
 public:
     CounterTuneIOAudioProcessor();
     ~CounterTuneIOAudioProcessor() override;
+    // Standard AudioProcessor overrides __________________________________________________________________________________________________
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
    #ifndef JucePlugin_PreferredChannelConfigurations
@@ -46,22 +47,20 @@ public:
 private:
 
 
-    // Audio playback
+    // Audio playback for testing _________________________________________________________________________________________________________
     std::unique_ptr<juce::AudioFormatManager> formatManager;
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
     std::unique_ptr<juce::AudioTransportSource> transportSource;
     std::unique_ptr<juce::ResamplingAudioSource> resamplingSource;
-
-
-
-
-
-
-
     void initializeAudioPlayback();
 
-    std::unique_ptr<PitchDetector> pitchDetector;
 
+
+
+
+
+    // Pitch detection ____________________________________________________________________________________________________________________
+    std::unique_ptr<PitchDetector> pitchDetector;
     class PitchDetectionThread : public juce::Thread {
     public:
         PitchDetectionThread(PitchDetector& detector)
@@ -74,11 +73,10 @@ private:
         juce::CriticalSection bufferLock;
         int writePosition = 0;  // Track where to write next
     };
-
     std::unique_ptr<PitchDetectionThread> pitchThread;
 
 
-    // melody service integration
+    // Melody generation __________________________________________________________________________________________________________________
     std::unique_ptr<MelodyGenerator> melodyGenerator;
 
 
@@ -108,8 +106,7 @@ private:
 
     // input capture logic
 
-    std::vector<int> capturedMelody{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
-    std::vector<int> formattedCapturedMelody{ -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+    std::vector<int> capturedMelody{ -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2 };
 
 
     int inputNote = -1;
