@@ -35,7 +35,8 @@ public:
     // Method to play the audio file
     void playTestFile();
 
-
+    // public crepe getters
+    bool isPitchDetectorReady() const { return pitchDetectorReady.load(); }
     float getCurrentFrequency() const;
     float getCurrentConfidence() const;
 
@@ -74,7 +75,7 @@ private:
         int writePosition = 0;  // Track where to write next
     };
     std::unique_ptr<PitchDetectionThread> pitchThread;
-
+    std::atomic<bool> pitchDetectorReady{ false };
 
     // Melody generation __________________________________________________________________________________________________________________
     std::unique_ptr<MelodyGenerator> melodyGenerator;
@@ -95,14 +96,8 @@ private:
 
     // state variables
     bool active = false;
-    juce::CriticalSection innerMutex;
     std::atomic<bool> awaitingResponse{ false };
-    bool shouldResetCapturedMelody = false;
-    int ptpCounter = 0;
-    bool melodyServiceLoaded = false;
-    bool shouldResetTimekeeping = true;
-    bool stateLoaded = false;
-    bool firstSync = true;
+
 
     // input capture logic
 

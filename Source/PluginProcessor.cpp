@@ -3,22 +3,29 @@
 
 CounterTuneIOAudioProcessor::CounterTuneIOAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
-     : AudioProcessor (BusesProperties()
-                     #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
-                      #endif
-                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
-                     #endif
-                       ),
+    : AudioProcessor(BusesProperties()
+#if ! JucePlugin_IsMidiEffect
+#if ! JucePlugin_IsSynth
+        .withInput("Input", juce::AudioChannelSet::stereo(), true)
+#endif
+        .withOutput("Output", juce::AudioChannelSet::stereo(), true)
+#endif
+    ),
     pitchDetector(std::make_unique<PitchDetector>()),
     pitchThread(std::make_unique<PitchDetectionThread>(*pitchDetector))
 #endif
 {
 
 
-    if (!pitchDetector->initialize(BinaryData::crepe_small_onnx, BinaryData::crepe_small_onnxSize)) {
+    if (!pitchDetector->initialize(BinaryData::crepe_small_onnx, BinaryData::crepe_small_onnxSize))
+    {
         DBG("Failed to initialize CREPE model");
+        pitchDetectorReady.store(false);
+    }
+    else
+    {
+        pitchDetectorReady.store(true);
+        DBG("CREPE model loaded successfully");
     }
 
 

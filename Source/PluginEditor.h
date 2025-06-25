@@ -12,6 +12,8 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 
+    static std::string vectorToString(const std::vector<int>& vec);
+
 private:
     void timerCallback() override;
 

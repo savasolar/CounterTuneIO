@@ -13,18 +13,31 @@ CounterTuneIOAudioProcessorEditor::~CounterTuneIOAudioProcessorEditor()
     stopTimer();
 }
 
+std::string CounterTuneIOAudioProcessorEditor::vectorToString(const std::vector<int>& vec)
+{
+    std::ostringstream oss;
+    oss << "[";
+    for (size_t i = 0; i < vec.size(); ++i)
+    {
+        if (i > 0) oss << ", "; // Add comma and space between elements
+        oss << vec[i];
+    }
+    oss << "]";
+    return oss.str();
+}
+
 void CounterTuneIOAudioProcessorEditor::timerCallback() {
 
-    // maybe schedule getters to only update when value is confirmed changed from the processor; reduces the processing load from floats to bools
-    float freq = audioProcessor.getCurrentFrequency();
-    float conf = audioProcessor.getCurrentConfidence();
 
+    pitchStatusLabel.setText(audioProcessor.isPitchDetectorReady() ? "STATUS: READY" : "STATUS: LOADING...", juce::dontSendNotification);
+    frequencyLabel.setText("FREQ: " + juce::String(audioProcessor.getCurrentFrequency(), 2) + " Hz", juce::dontSendNotification);
+    confidenceLabel.setText("CONFIDENCE: " + juce::String(audioProcessor.getCurrentConfidence(), 3), juce::dontSendNotification);
 
-    // to do: set pitchStatusLabel text
-    frequencyLabel.setText("FREQ: " + juce::String(freq, 2) + " Hz", juce::dontSendNotification);
-    confidenceLabel.setText("CONFIDENCE: " + juce::String(conf, 3), juce::dontSendNotification);
     // to do: set melodyStatusLabel text
+
     // to do: set inputMelodyLabel text
+    inputMelodyLabel.setText("INPUT: " + vectorToString(audioProcessor.getCapturedMelody()), juce::dontSendNotification);
+
     // to do: set generatedMelodyLabel text
 }
 
