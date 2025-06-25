@@ -76,13 +76,13 @@ void CounterTuneIOAudioProcessorEditor::resized()
     melodyStatusLabel.setBounds(212, 250, 588, 58);
     addAndMakeVisible(melodyStatusLabel);
 
-    inputMelodyLabel.setText("INPUT: _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _", juce::dontSendNotification);
+    inputMelodyLabel.setText("INPUT: [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]", juce::dontSendNotification);
     inputMelodyLabel.setColour(juce::Label::textColourId, juce::Colours::white);
     inputMelodyLabel.setJustificationType(juce::Justification::centredLeft);
     inputMelodyLabel.setBounds(212, 308, 588, 58);
     addAndMakeVisible(inputMelodyLabel);
 
-    generatedMelodyLabel.setText("OUTPUT: _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _", juce::dontSendNotification);
+    generatedMelodyLabel.setText("OUTPUT: [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]", juce::dontSendNotification);
     generatedMelodyLabel.setColour(juce::Label::textColourId, juce::Colours::white);
     generatedMelodyLabel.setJustificationType(juce::Justification::centredLeft);
     generatedMelodyLabel.setBounds(212, 366, 588, 59);

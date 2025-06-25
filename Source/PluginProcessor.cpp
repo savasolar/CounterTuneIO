@@ -27,9 +27,7 @@ CounterTuneIOAudioProcessor::CounterTuneIOAudioProcessor()
 
 
 
-    // <new>
     pitchThread->startThread();
-    // </new>
 
 
 }
@@ -37,9 +35,7 @@ CounterTuneIOAudioProcessor::CounterTuneIOAudioProcessor()
 CounterTuneIOAudioProcessor::~CounterTuneIOAudioProcessor()
 {
 
-    // <new>
     pitchThread->stopThread(1000);
-    // </new>
 
 
 }
@@ -108,7 +104,6 @@ void CounterTuneIOAudioProcessor::changeProgramName (int index, const juce::Stri
 
 void CounterTuneIOAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-//    pitchDetector->setInputSampleRate(sampleRate);
 
     if (transportSource != nullptr)
         transportSource->prepareToPlay(samplesPerBlock, sampleRate);
@@ -175,19 +170,12 @@ void CounterTuneIOAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     // Add other processing here ...
 
 
-//    // analyze input audio for pitch detection
-//    if (pitchDetector) {
-//        pitchDetector->processBuffer(buffer);
-//    }
-
-    // <new>
-
     if (pitchThread)
     {
         pitchThread->processAudio(buffer);
     }
 
-    // </new>
+
 }
 
 bool CounterTuneIOAudioProcessor::hasEditor() const
@@ -275,29 +263,6 @@ void CounterTuneIOAudioProcessor::initializeAudioPlayback()
 
 
 
-// <new>
-
-//void CounterTuneIOAudioProcessor::PitchDetectionThread::run() {
-//    while (!threadShouldExit()) {
-//        {
-//            juce::ScopedLock lock(bufferLock);
-//            if (bufferToProcess.getNumSamples() > 0) {
-//                pitchDetector.processBuffer(bufferToProcess);
-//                bufferToProcess.clear(); // Clear after processing
-//            }
-//        }
-//        wait(10); // Sleep briefly to avoid busy-waiting
-//    }
-//}
-//
-//void CounterTuneIOAudioProcessor::PitchDetectionThread::processAudio(const juce::AudioBuffer<float>& buffer) {
-//    juce::ScopedLock lock(bufferLock);
-//    bufferToProcess.makeCopyOf(buffer); // Copy the incoming buffer
-//}
-
-
-
-
 
 void CounterTuneIOAudioProcessor::PitchDetectionThread::run() {
     while (!threadShouldExit()) {
@@ -346,11 +311,6 @@ void CounterTuneIOAudioProcessor::PitchDetectionThread::processAudio(const juce:
     }
     writePosition += samplesNeeded;
 }
-
-
-
-
-// </new>
 
 
 

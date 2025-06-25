@@ -60,6 +60,8 @@ target_sources(CounterTuneIO PRIVATE
     Source/PluginProcessor.h
     Source/PitchDetector.cpp
     Source/PitchDetector.h
+    Source/MelodyGenerator.cpp
+    Source/MelodyGenerator.h
 )
 
 # Binary data

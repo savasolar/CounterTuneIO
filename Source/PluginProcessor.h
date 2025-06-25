@@ -2,38 +2,31 @@
 
 #include <JuceHeader.h>
 #include "PitchDetector.h"
+#include "MelodyGenerator.h"
 
 class CounterTuneIOAudioProcessor  : public juce::AudioProcessor
 {
 public:
     CounterTuneIOAudioProcessor();
     ~CounterTuneIOAudioProcessor() override;
-
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
-
    #ifndef JucePlugin_PreferredChannelConfigurations
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
    #endif
-
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
-
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override;
-
     const juce::String getName() const override;
-
     bool acceptsMidi() const override;
     bool producesMidi() const override;
     bool isMidiEffect() const override;
     double getTailLengthSeconds() const override;
-
     int getNumPrograms() override;
     int getCurrentProgram() override;
     void setCurrentProgram (int index) override;
     const juce::String getProgramName (int index) override;
     void changeProgramName (int index, const juce::String& newName) override;
-
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
@@ -44,6 +37,10 @@ public:
 
     float getCurrentFrequency() const;
     float getCurrentConfidence() const;
+
+
+    // melody access
+    const std::vector<int>& getCapturedMelody() const { return capturedMelody; };
 
 
 private:
@@ -57,27 +54,13 @@ private:
 
 
 
-    std::unique_ptr<PitchDetector> pitchDetector;
+
 
 
 
     void initializeAudioPlayback();
 
-
-
-    // <new>
-
-    //class PitchDetectionThread : public juce::Thread {
-    //public:
-    //    PitchDetectionThread(PitchDetector& detector)
-    //        : juce::Thread("Pitch Detection Thread"), pitchDetector(detector) {}
-    //    void run() override;
-    //    void processAudio(const juce::AudioBuffer<float>& buffer);
-    //private:
-    //    PitchDetector& pitchDetector;
-    //    juce::AudioBuffer<float> bufferToProcess;
-    //    juce::CriticalSection bufferLock;
-    //};
+    std::unique_ptr<PitchDetector> pitchDetector;
 
     class PitchDetectionThread : public juce::Thread {
     public:
@@ -92,12 +75,57 @@ private:
         int writePosition = 0;  // Track where to write next
     };
 
-    // </new>
-
-    // <new>
     std::unique_ptr<PitchDetectionThread> pitchThread;
-    // </new>
-    
+
+
+    // melody service integration
+    std::unique_ptr<MelodyGenerator> melodyGenerator;
+
+
+
+    //class MelodyGenerationThread : public juce::Thread {
+    //public:
+    //    MelodyGenerationThread(MelodyGenerator& generator)
+    //        : juce::Thread("Melody Generation Thread"), melodyGenerator(generator) {}
+    //    
+
+    //private:
+
+    //};
+
+
+
+    // state variables
+    bool active = false;
+    juce::CriticalSection innerMutex;
+    std::atomic<bool> awaitingResponse{ false };
+    bool shouldResetCapturedMelody = false;
+    int ptpCounter = 0;
+    bool melodyServiceLoaded = false;
+    bool shouldResetTimekeeping = true;
+    bool stateLoaded = false;
+    bool firstSync = true;
+
+    // input capture logic
+
+    std::vector<int> capturedMelody{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+    std::vector<int> formattedCapturedMelody{ -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+
+
+    int inputNote = -1;
+    bool inputNoteActive = false;
+    int lastInputNote = -1;
+    int capturePosition = 0;
+    double captureCounter = 0.0;
+    void formatCapturedMelody();
+
+    // timing
+    float bpm = 140.0f;
+    double samplesPerSymbol = 0.0;
+    void updateSamplesPerSymbol() { if (active) samplesPerSymbol = 60.0 / bpm * getSampleRate() / 4.0 * 8.0/*this is # of beats*/ / 8.0; }
+    double totalSamples = 0.0;      // Cumulative samples processed
+    double nextSymbolTime = 0.0;    // Time (in samples) when the next symbol should occur
+
 
 
     //==============================================================================
