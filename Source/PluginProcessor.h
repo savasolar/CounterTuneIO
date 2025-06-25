@@ -82,15 +82,26 @@ private:
 
     // Melody generation __________________________________________________________________________________________________________________
     std::unique_ptr<MelodyGenerator> melodyGenerator;
-    //class MelodyGenerationThread : public juce::Thread {
-    //public:
-    //    MelodyGenerationThread(MelodyGenerator& generator)
-    //        : juce::Thread("Melody Generation Thread"), melodyGenerator(generator) {}
-    //    
 
-    //private:
 
-    //};
+    class MelodyGenerationThread : public juce::Thread {
+    public:
+        MelodyGenerationThread(MelodyGenerator& generator)
+            : juce::Thread("Melody Generation Thread"), melodyGenerator(generator) {}
+        void run() override;
+        void requestGeneration(const std::vector<int>& inputMelody);
+        std::vector<int> getGeneratedMelody();
+        bool hasNewMelody() const { return hasNewResult.load(); }
+
+    private:
+        MelodyGenerator& melodyGenerator;
+        juce::CriticalSection requestLock;
+        juce::CriticalSection resultLock;
+        std::vector<int> pendingInput;
+        std::vector<int> generatedResult;
+        std::atomic<bool> hasNewRequest{ false };
+        std::atomic<bool> hasNewResult{ false };
+    };
 
     std::atomic<bool> generatorReady{ false };
 
