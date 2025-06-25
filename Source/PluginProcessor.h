@@ -40,9 +40,12 @@ public:
     float getCurrentFrequency() const;
     float getCurrentConfidence() const;
 
+    // public generator getters
+    bool isGeneratorReady() const { return generatorReady.load(); }
 
     // melody access
     const std::vector<int>& getCapturedMelody() const { return capturedMelody; };
+    const std::vector<int>& getGeneratedMelody() const { return generatedMelody; };
 
 
 private:
@@ -79,9 +82,6 @@ private:
 
     // Melody generation __________________________________________________________________________________________________________________
     std::unique_ptr<MelodyGenerator> melodyGenerator;
-
-
-
     //class MelodyGenerationThread : public juce::Thread {
     //public:
     //    MelodyGenerationThread(MelodyGenerator& generator)
@@ -92,16 +92,20 @@ private:
 
     //};
 
+    std::atomic<bool> generatorReady{ false };
+
 
 
     // state variables
     bool active = false;
     std::atomic<bool> awaitingResponse{ false };
 
+    std::vector<int> capturedMelody{ -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2 };
+    std::vector<int> generatedMelody{ -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2 };
 
     // input capture logic
 
-    std::vector<int> capturedMelody{ -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2 };
+
 
 
     int inputNote = -1;

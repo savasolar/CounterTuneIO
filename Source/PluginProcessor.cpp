@@ -12,7 +12,8 @@ CounterTuneIOAudioProcessor::CounterTuneIOAudioProcessor()
 #endif
     ),
     pitchDetector(std::make_unique<PitchDetector>()),
-    pitchThread(std::make_unique<PitchDetectionThread>(*pitchDetector))
+    pitchThread(std::make_unique<PitchDetectionThread>(*pitchDetector)),
+    melodyGenerator(std::make_unique<MelodyGenerator>())
 #endif
 {
 
@@ -28,13 +29,27 @@ CounterTuneIOAudioProcessor::CounterTuneIOAudioProcessor()
         DBG("CREPE model loaded successfully");
     }
 
+    pitchThread->startThread();
+
+
+
+    if (!melodyGenerator->initialize(BinaryData::melody_model_onnx, BinaryData::melody_model_onnxSize))
+    {
+        DBG("Failed to initialize melody model");
+    }
+    else
+    {
+        DBG("Melody model loaded successfully");
+    }
+
+    // generatorThread->startThread();
+
+
+
+
 
 
     initializeAudioPlayback();
-
-
-
-    pitchThread->startThread();
 
 
 }
@@ -111,6 +126,11 @@ void CounterTuneIOAudioProcessor::changeProgramName (int index, const juce::Stri
 
 void CounterTuneIOAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
+
+    updateSamplesPerSymbol();
+
+
+
 
     if (transportSource != nullptr)
         transportSource->prepareToPlay(samplesPerBlock, sampleRate);
