@@ -129,7 +129,9 @@ void CounterTuneIOAudioProcessor::prepareToPlay(double sampleRate, int samplesPe
 
     updateSamplesPerSymbol();
 
-
+    totalSamples = 0.0;
+    nextSymbolTime = 0.0;
+    capturePosition = 0;
 
 
     if (transportSource != nullptr)
@@ -194,8 +196,7 @@ void CounterTuneIOAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
         }
     }
 
-    // Add other processing here ...
-
+    
 
     if (pitchThread)
     {
@@ -203,6 +204,25 @@ void CounterTuneIOAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     }
 
 
+
+
+
+
+    while (nextSymbolTime < totalSamples + buffer.getNumSamples()) {
+        float frequency = pitchDetector->getCurrentFrequency();
+        float confidence = pitchDetector->getCurrentConfidence();
+        int midiNote = -1;
+        if (confidence > 0.5f) {
+            midiNote = frequencyToMidiNote(frequency);
+        }
+        {
+            juce::ScopedLock lock(capturedMelodyLock);
+            capturedMelody[capturePosition % 32] = midiNote;
+        }
+        capturePosition++;
+        nextSymbolTime += samplesPerSymbol;
+    }
+    totalSamples += buffer.getNumSamples();
 }
 
 bool CounterTuneIOAudioProcessor::hasEditor() const
@@ -354,6 +374,18 @@ float CounterTuneIOAudioProcessor::getCurrentConfidence() const {
 }
 
 
+std::vector<int> CounterTuneIOAudioProcessor::getCapturedMelodySnapshot() const {
+    juce::ScopedLock lock(capturedMelodyLock);
+    return capturedMelody;
+}
+
+
+
+int CounterTuneIOAudioProcessor::frequencyToMidiNote(float frequency) const {
+    if (frequency <= 0) return -1;
+    float midiNote = 69.0f + 12.0f * (std::log(frequency / 440.0f) / std::log(2.0f));
+    return static_cast<int>(std::round(midiNote));
+}
 
 
 

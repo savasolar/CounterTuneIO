@@ -36,7 +36,12 @@ void CounterTuneIOAudioProcessorEditor::timerCallback() {
     // to do: set melodyStatusLabel text
 
     // to do: set inputMelodyLabel text
-    inputMelodyLabel.setText("INPUT: " + vectorToString(audioProcessor.getCapturedMelody()), juce::dontSendNotification);
+
+//    inputMelodyLabel.setText("INPUT: " + vectorToString(audioProcessor.getCapturedMelody()), juce::dontSendNotification);
+
+    auto melodySnapshot = audioProcessor.getCapturedMelodySnapshot();
+    inputMelodyLabel.setText("INPUT: " + vectorToString(melodySnapshot), juce::dontSendNotification);
+
 
     // to do: set generatedMelodyLabel text
 }
