@@ -31,6 +31,7 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+
     // Method to play the audio file
     void playTestFile();
 
@@ -46,7 +47,6 @@ public:
     const std::vector<int>& getCapturedMelody() const { return capturedMelody; };
     const std::vector<int>& getGeneratedMelody() const { return generatedMelody; };
 
-    std::vector<int> getCapturedMelodySnapshot() const;
 
 private:
 
@@ -59,18 +59,8 @@ private:
     void initializeAudioPlayback();
 
 
-    // timing
 
-//    double captureCounter = 0.0;
-    float bpm = 140.0f;
-    double totalSamples = 0.0;
-    double nextSymbolTime = 0.0;
-    double samplesPerSymbol = 0.0;
-    void updateSamplesPerSymbol() { if (active) samplesPerSymbol = 60.0 / bpm * getSampleRate() / 4.0 * 8.0/*this is # of beats*/ / 8.0; }
-    bool active = false;
-    std::atomic<bool> awaitingResponse{ false };
 
-    
 
 
     // Pitch detection ____________________________________________________________________________________________________________________
@@ -90,51 +80,58 @@ private:
     std::unique_ptr<PitchDetectionThread> pitchThread;
     std::atomic<bool> pitchDetectorReady{ false };
 
-    // Melody capture _____________________________________________________________________________________________________________________
-    std::vector<int> capturedMelody
-    { 
-        -2, -2, -2, -2, 
-        -2, -2, -2, -2, 
-        -2, -2, -2, -2, 
-        -2, -2, -2, -2, 
-        -2, -2, -2, -2, 
-        -2, -2, -2, -2, 
-        -2, -2, -2, -2, 
-        -2, -2, -2, -2 
-    };
-    int frequencyToMidiNote(float frequency) const;
-    juce::CriticalSection capturedMelodyLock;
-    int capturePosition = 0;
-    
-
     // Melody generation __________________________________________________________________________________________________________________
-    std::vector<int> generatedMelody
-    { 
-        -2, -2, -2, -2, 
-        -2, -2, -2, -2, 
-        -2, -2, -2, -2, 
-        -2, -2, -2, -2, 
-        -2, -2, -2, -2, 
-        -2, -2, -2, -2, 
-        -2, -2, -2, -2, 
-        -2, -2, -2, -2 
-    };
     std::unique_ptr<MelodyGenerator> melodyGenerator;
 
 
-    //class MelodyGenerationThread : public juce::Thread {
-    // ...
-    //};
+    class MelodyGenerationThread : public juce::Thread {
+    public:
+        MelodyGenerationThread(MelodyGenerator& generator)
+            : juce::Thread("Melody Generation Thread"), melodyGenerator(generator) {}
+        void run() override;
+        void requestGeneration(const std::vector<int>& inputMelody);
+        std::vector<int> getGeneratedMelody();
+        bool hasNewMelody() const { return hasNewResult.load(); }
+
+    private:
+        MelodyGenerator& melodyGenerator;
+        juce::CriticalSection requestLock;
+        juce::CriticalSection resultLock;
+        std::vector<int> pendingInput;
+        std::vector<int> generatedResult;
+        std::atomic<bool> hasNewRequest{ false };
+        std::atomic<bool> hasNewResult{ false };
+    };
 
     std::atomic<bool> generatorReady{ false };
 
 
 
+    // state variables
+    bool active = false;
+    std::atomic<bool> awaitingResponse{ false };
+
+    std::vector<int> capturedMelody{ -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2 };
+    std::vector<int> generatedMelody{ -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2 };
+
+    // input capture logic
 
 
 
-    
-    
+
+    int inputNote = -1;
+    bool inputNoteActive = false;
+    int lastInputNote = -1;
+    int capturePosition = 0;
+    double captureCounter = 0.0;
+    void formatCapturedMelody();
+
+    // timing
+    float bpm = 140.0f;
+    double samplesPerSymbol = 0.0;
+    void updateSamplesPerSymbol() { if (active) samplesPerSymbol = 60.0 / bpm * getSampleRate() / 4.0 * 8.0/*this is # of beats*/ / 8.0; }
+    double totalSamples = 0.0;      // Cumulative samples processed
+    double nextSymbolTime = 0.0;    // Time (in samples) when the next symbol should occur
 
 
 
