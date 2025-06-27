@@ -1,10 +1,10 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-CounterTuneIOAudioProcessorEditor::CounterTuneIOAudioProcessorEditor (CounterTuneIOAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p)
+CounterTuneIOAudioProcessorEditor::CounterTuneIOAudioProcessorEditor(CounterTuneIOAudioProcessor& p)
+    : AudioProcessorEditor(&p), audioProcessor(p)
 {
-    setSize (800, 600);
+    setSize(800, 600);
     startTimer(50);
 }
 
@@ -36,15 +36,20 @@ void CounterTuneIOAudioProcessorEditor::timerCallback() {
     // to do: set melodyStatusLabel text
 
     // to do: set inputMelodyLabel text
+
     inputMelodyLabel.setText("INPUT: " + vectorToString(audioProcessor.getCapturedMelody()), juce::dontSendNotification);
+
+//    auto melodySnapshot = audioProcessor.getCapturedMelodySnapshot();
+//    inputMelodyLabel.setText("INPUT: " + vectorToString(melodySnapshot), juce::dontSendNotification);
+
 
     // to do: set generatedMelodyLabel text
 }
 
-void CounterTuneIOAudioProcessorEditor::paint (juce::Graphics& g)
+void CounterTuneIOAudioProcessorEditor::paint(juce::Graphics& g)
 {
-    g.fillAll (juce::Colour::fromRGB(0, 0, 0));
-    g.setColour (juce::Colours::white);
+    g.fillAll(juce::Colour::fromRGB(0, 0, 0));
+    g.setColour(juce::Colours::white);
     g.fillRect(0, 75, 800, 1);
     g.fillRect(0, 250, 800, 1);
     g.fillRect(0, 425, 800, 1);
@@ -111,48 +116,48 @@ void CounterTuneIOAudioProcessorEditor::resized()
     playFileButton.setBounds(12, 12, 150, 50);
     addAndMakeVisible(playFileButton);
     playFileButton.onClick = [this]
-    {
-        DBG("playFileButton clicked");
-        audioProcessor.playTestFile();
-    };
+        {
+            DBG("playFileButton clicked");
+            audioProcessor.playTestFile();
+        };
 
     sampleButtonA.setButtonText("A");
     sampleButtonA.setBounds(212, 488, 50, 50);
     addAndMakeVisible(sampleButtonA);
     sampleButtonA.onClick = [this]
-    {
-        DBG("sampleButtonA clicked");
-    };
+        {
+            DBG("sampleButtonA clicked");
+        };
 
     sampleButtonB.setButtonText("B");
     sampleButtonB.setBounds(274, 488, 50, 50);
     addAndMakeVisible(sampleButtonB);
     sampleButtonB.onClick = [this]
-    {
-        DBG("sampleButtonB clicked");
-    };
+        {
+            DBG("sampleButtonB clicked");
+        };
 
     sampleButtonC.setButtonText("C");
     sampleButtonC.setBounds(336, 488, 50, 50);
     addAndMakeVisible(sampleButtonC);
     sampleButtonC.onClick = [this]
-    {
-        DBG("sampleButtonC clicked");
-    };
+        {
+            DBG("sampleButtonC clicked");
+        };
 
     sampleButtonD.setButtonText("D");
     sampleButtonD.setBounds(398, 488, 50, 50);
     addAndMakeVisible(sampleButtonD);
     sampleButtonD.onClick = [this]
-    {
-        DBG("sampleButtonD clicked");
-    };
+        {
+            DBG("sampleButtonD clicked");
+        };
 
     sampleButtonE.setButtonText("E");
     sampleButtonE.setBounds(460, 488, 50, 50);
     addAndMakeVisible(sampleButtonE);
     sampleButtonE.onClick = [this]
-    {
-        DBG("sampleButtonE clicked");
-    };
+        {
+            DBG("sampleButtonE clicked");
+        };
 }

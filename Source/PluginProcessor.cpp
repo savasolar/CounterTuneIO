@@ -71,29 +71,29 @@ const juce::String CounterTuneIOAudioProcessor::getName() const
 
 bool CounterTuneIOAudioProcessor::acceptsMidi() const
 {
-   #if JucePlugin_WantsMidiInput
+#if JucePlugin_WantsMidiInput
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
 bool CounterTuneIOAudioProcessor::producesMidi() const
 {
-   #if JucePlugin_ProducesMidiOutput
+#if JucePlugin_ProducesMidiOutput
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
 bool CounterTuneIOAudioProcessor::isMidiEffect() const
 {
-   #if JucePlugin_IsMidiEffect
+#if JucePlugin_IsMidiEffect
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
 double CounterTuneIOAudioProcessor::getTailLengthSeconds() const
@@ -111,16 +111,16 @@ int CounterTuneIOAudioProcessor::getCurrentProgram()
     return 0;
 }
 
-void CounterTuneIOAudioProcessor::setCurrentProgram (int index)
+void CounterTuneIOAudioProcessor::setCurrentProgram(int index)
 {
 }
 
-const juce::String CounterTuneIOAudioProcessor::getProgramName (int index)
+const juce::String CounterTuneIOAudioProcessor::getProgramName(int index)
 {
     return {};
 }
 
-void CounterTuneIOAudioProcessor::changeProgramName (int index, const juce::String& newName)
+void CounterTuneIOAudioProcessor::changeProgramName(int index, const juce::String& newName)
 {
 }
 
@@ -129,7 +129,9 @@ void CounterTuneIOAudioProcessor::prepareToPlay(double sampleRate, int samplesPe
 
     updateSamplesPerSymbol();
 
-
+    totalSamples = 0.0;
+    nextSymbolTime = 0.0;
+    capturePosition = 0;
 
 
     if (transportSource != nullptr)
@@ -149,29 +151,29 @@ void CounterTuneIOAudioProcessor::releaseResources()
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool CounterTuneIOAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool CounterTuneIOAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
 {
-  #if JucePlugin_IsMidiEffect
-    juce::ignoreUnused (layouts);
+#if JucePlugin_IsMidiEffect
+    juce::ignoreUnused(layouts);
     return true;
-  #else
+#else
 
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
-     && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
+        && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
         return false;
 
-   #if ! JucePlugin_IsSynth
+#if ! JucePlugin_IsSynth
     if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
         return false;
-   #endif
+#endif
 
     return true;
-  #endif
+#endif
 }
 #endif
 
 void CounterTuneIOAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) {
-    
+
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
@@ -194,7 +196,6 @@ void CounterTuneIOAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
         }
     }
 
-    // Add other processing here ...
 
 
     if (pitchThread)
@@ -203,6 +204,25 @@ void CounterTuneIOAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     }
 
 
+
+
+
+
+    //while (nextSymbolTime < totalSamples + buffer.getNumSamples()) {
+    //    float frequency = pitchDetector->getCurrentFrequency();
+    //    float confidence = pitchDetector->getCurrentConfidence();
+    //    int midiNote = -1;
+    //    if (confidence > 0.5f) {
+    //        midiNote = frequencyToMidiNote(frequency);
+    //    }
+    //    {
+    //        juce::ScopedLock lock(capturedMelodyLock);
+    //        capturedMelody[capturePosition % 32] = midiNote;
+    //    }
+    //    capturePosition++;
+    //    nextSymbolTime += samplesPerSymbol;
+    //}
+    //totalSamples += buffer.getNumSamples();
 }
 
 bool CounterTuneIOAudioProcessor::hasEditor() const
@@ -212,7 +232,7 @@ bool CounterTuneIOAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* CounterTuneIOAudioProcessor::createEditor()
 {
-    return new CounterTuneIOAudioProcessorEditor (*this);
+    return new CounterTuneIOAudioProcessorEditor(*this);
 }
 
 
@@ -222,12 +242,12 @@ juce::AudioProcessorEditor* CounterTuneIOAudioProcessor::createEditor()
 
 
 
-void CounterTuneIOAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
+void CounterTuneIOAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
 
 }
 
-void CounterTuneIOAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+void CounterTuneIOAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
 
 }
@@ -354,6 +374,18 @@ float CounterTuneIOAudioProcessor::getCurrentConfidence() const {
 }
 
 
+//std::vector<int> CounterTuneIOAudioProcessor::getCapturedMelodySnapshot() const {
+//    juce::ScopedLock lock(capturedMelodyLock);
+//    return capturedMelody;
+//}
+
+
+
+int CounterTuneIOAudioProcessor::frequencyToMidiNote(float frequency) const {
+    if (frequency <= 0) return -1;
+    float midiNote = 69.0f + 12.0f * (std::log(frequency / 440.0f) / std::log(2.0f));
+    return static_cast<int>(std::round(midiNote));
+}
 
 
 
