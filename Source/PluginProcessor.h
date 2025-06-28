@@ -60,14 +60,13 @@ private:
 
 
     // timing
-
-//    double captureCounter = 0.0;
-    float bpm = 140.0f;
-    double totalSamples = 0.0;
-    double nextSymbolTime = 0.0;
-    double samplesPerSymbol = 0.0;
-    void updateSamplesPerSymbol() { if (active) samplesPerSymbol = 60.0 / bpm * getSampleRate() / 4.0 * 8.0 / 8.0; }
     bool active = false;
+    float bpm = 140.0f;
+    double captureCounter = 0.0;
+    double samplesPerSymbol = 0.0;
+//    double totalSamples = 0.0;
+//    double nextSymbolTime = 0.0;
+    void updateSamplesPerSymbol() { if (active) samplesPerSymbol = 60.0 / bpm * getSampleRate() / 4.0 * 8.0 / 8.0; }
     std::atomic<bool> awaitingResponse{ false };
 
 

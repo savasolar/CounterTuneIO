@@ -129,11 +129,6 @@ void CounterTuneIOAudioProcessor::prepareToPlay(double sampleRate, int samplesPe
 
     updateSamplesPerSymbol();
 
-    totalSamples = 0.0;
-    nextSymbolTime = 0.0;
-    capturePosition = 0;
-
-
     if (transportSource != nullptr)
         transportSource->prepareToPlay(samplesPerBlock, sampleRate);
 
@@ -206,23 +201,20 @@ void CounterTuneIOAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 
 
 
+    if (captureCounter >= samplesPerSymbol)
+    {
+        updateSamplesPerSymbol();
+//        if (shouldResetCapturedMelody) { std::fill(capturedMelody.begin(), capturedMelody.end(), "_"); shouldResetCapturedMelody = false; }
 
 
-    //while (nextSymbolTime < totalSamples + buffer.getNumSamples()) {
-    //    float frequency = pitchDetector->getCurrentFrequency();
-    //    float confidence = pitchDetector->getCurrentConfidence();
-    //    int midiNote = -1;
-    //    if (confidence > 0.5f) {
-    //        midiNote = frequencyToMidiNote(frequency);
-    //    }
-    //    {
-    //        juce::ScopedLock lock(capturedMelodyLock);
-    //        capturedMelody[capturePosition % 32] = midiNote;
-    //    }
-    //    capturePosition++;
-    //    nextSymbolTime += samplesPerSymbol;
-    //}
-    //totalSamples += buffer.getNumSamples();
+
+        captureCounter -= samplesPerSymbol;
+    }
+    captureCounter += buffer.getNumSamples();
+
+
+
+
 }
 
 bool CounterTuneIOAudioProcessor::hasEditor() const
