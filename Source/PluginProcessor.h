@@ -68,7 +68,9 @@ private:
 //    double nextSymbolTime = 0.0;
     void updateSamplesPerSymbol() { if (active) samplesPerSymbol = 60.0 / bpm * getSampleRate() / 4.0 * 8.0 / 8.0; }
     std::atomic<bool> awaitingResponse{ false };
-
+    bool shouldResetCapturedMelody = false;
+    bool shouldResetTimekeeping = true;
+    bool inputNoteActive = false;
 
 
 
