@@ -71,6 +71,7 @@ private:
     bool shouldResetCapturedMelody = false;
     bool shouldResetTimekeeping = true;
     bool inputNoteActive = false;
+    int testInt = 0;
 
 
 

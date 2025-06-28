@@ -126,7 +126,7 @@ void CounterTuneIOAudioProcessor::changeProgramName(int index, const juce::Strin
 
 void CounterTuneIOAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-
+    active = true;
     updateSamplesPerSymbol();
 
     if (transportSource != nullptr)
@@ -138,6 +138,8 @@ void CounterTuneIOAudioProcessor::prepareToPlay(double sampleRate, int samplesPe
 
 void CounterTuneIOAudioProcessor::releaseResources()
 {
+    active = false;
+
     if (transportSource != nullptr)
         transportSource->releaseResources();
 
@@ -191,23 +193,16 @@ void CounterTuneIOAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
         }
     }
 
-
-
     if (pitchThread)
     {
         pitchThread->processAudio(buffer);
     }
 
 
-    if (shouldResetTimekeeping == true)
-    {
-        capturePosition = 0;
-        for (int voice = 0; voice < 7; ++voice)
-        {
-//            playbackPositions[voice] = 0;
-        }
-//        nextSymbolTime = totalSamples;
-    }
+
+
+
+
 
 
 
@@ -215,79 +210,32 @@ void CounterTuneIOAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     if (captureCounter >= samplesPerSymbol)
     {
         updateSamplesPerSymbol();
-//        if (shouldResetCapturedMelody) { std::fill(capturedMelody.begin(), capturedMelody.end(), "_"); shouldResetCapturedMelody = false; }
 
         // Capture logic
-//        std::string currentSlot = "_";
         if (inputNoteActive)
         {
-//            currentSlot = std::to_string(inputNote);
+
         }
-//        capturedMelody[capturePosition % 32] = currentSlot;
+
         capturePosition++;
 
         if ((capturePosition % 32) == 0)
         {
-            shouldResetCapturedMelody = true;
-//            formatCapturedMelody();
-            if (!awaitingResponse.load())
-            {
-//                bool hasNotes = std::any_of(capturedMelody.begin(), capturedMelody.end(), [](const std::string& s) { return s != "_"; });
-//                if (hasNotes)
-//                {
-//                    if (melodyServiceLoaded == true)
-//                    {
-//                        refreshStatusMessage("STATUS: GENERATING...");
-//                        generateMelody();
-//                    }
-//                }
-//                else  // If the captured melody for this cycle is completely empty
-//                {
-//                    for (int voice = 0; voice < 7; ++voice)
-//                    {
-//                        std::fill(unshiftedGeneratedMelodies[voice].begin(), unshiftedGeneratedMelodies[voice].end(), "_");
-//                        std::fill(generatedMelodies[voice].begin(), generatedMelodies[voice].end(), "_");
-//                    }
 
-                    // Don't add note-off here as we'll handle that in the playback section
-                    shouldResetTimekeeping = true;
-//                }
-            }
+
+
+
+
+
+
+
         }
 
-        // Generated melody octave offset for all voices
-//        static int lastOctave = getOctBInt();
-//        int currentOctave = getOctBInt();
-//        if (currentOctave != lastOctave)
-        //{
-        //    lastOctave = currentOctave;
-        //    int octaveOffset = 12 * currentOctave;
-        //    for (int voice = 0; voice < 7; ++voice)
-        //    {
-        //        for (size_t i = 0; i < unshiftedGeneratedMelodies[voice].size(); ++i)
-        //        {
-        //            if (unshiftedGeneratedMelodies[voice][i] != "-" && unshiftedGeneratedMelodies[voice][i] != "_")
-        //            {
-        //                try
-        //                {
-        //                    int note = std::stoi(unshiftedGeneratedMelodies[voice][i]);
-        //                    note = std::max(0, std::min(127, note + octaveOffset));
-        //                    generatedMelodies[voice][i] = std::to_string(note);
-        //                }
-        //                catch (const std::exception&)
-        //                {
-        //                    generatedMelodies[voice][i] = "_"; // Handle errors
-        //                }
-        //            }
-        //            else
-        //            {
-        //                generatedMelodies[voice][i] = unshiftedGeneratedMelodies[voice][i];
-        //            }
-        //        }
-        //    }
-        //}
 
-        DBG("HOLY FUCK");
+
+
+        testInt += 1;
+        DBG("sixteenth note: " + juce::String(testInt));
 
         captureCounter -= samplesPerSymbol;
     }
